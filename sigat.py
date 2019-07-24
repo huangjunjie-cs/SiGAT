@@ -1,7 +1,10 @@
-#!/usr/bin/env python
-# coding=utf-8
-__author__ = 'h12345jack'
-
+#!/usr/bin/env python3
+#-*- coding: utf-8 -*-
+"""
+@author: huangjunjie
+@file: sigat.py
+@time: 2018/12/10
+"""
 
 import sys
 import os
@@ -18,54 +21,51 @@ import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
 
-from logistic_function import logistic_embedding4
-
 from common import DATASET_NUM_DIC
-from common import my_decorator
 #
-
 from fea_extra import FeaExtra
 
-print = my_decorator(print)
+
+OUTPUT_DIR = './embeddings/sigat'
+if not os.path.exists('embeddings'):
+    os.mkdir('embeddings')
+    if not os.path.exists(OUTPUT_DIR):
+        os.mkdir(OUTPUT_DIR)
+
+
 
 # Training settings
 parser = argparse.ArgumentParser()
-parser.add_argument('--cuda', action='store_true', default=True, help='Disables CUDA training.')
+parser.add_argument('--devices', type=str, default='cpu', help='Devices')
 parser.add_argument('--seed', type=int, default=13, help='Random seed.')
 parser.add_argument('--epochs', type=int, default=100, help='Number of epochs to train.')
-parser.add_argument('--lr', type=float, default=0.001, help='Initial learning rate.')
-parser.add_argument('--weight_decay', type=float, default=0.001, help='Weight decay (L2 loss on parameters).')
+parser.add_argument('--lr', type=float, default=0.0005, help='Initial learning rate.')
+parser.add_argument('--weight_decay', type=float, default=0.0001, help='Weight decay (L2 loss on parameters).')
 parser.add_argument('--dataset', default='bitcoin_alpha', help='Dataset')
 parser.add_argument('--dim', type=int, default=20, help='Embedding Dimension')
 parser.add_argument('--fea_dim', type=int, default=20, help='Feature Embedding Dimension')
 parser.add_argument('--batch_size', type=int, default=500, help='Batch Size')
-parser.add_argument('--gpu', default='0', help='GPU')
-parser.add_argument('--dropout', type=float, default=0.0, help='Folder k')
+parser.add_argument('--dropout', type=float, default=0.0, help='Dropout k')
 parser.add_argument('--k', default=1, help='Folder k')
 
 args = parser.parse_args()
-os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
-args.cuda = args.cuda and torch.cuda.is_available()
 
 random.seed(args.seed)
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 
+NEG_LOSS_RATIO = 1
 NUM_NODE = DATASET_NUM_DIC[args.dataset]
 WEIGHT_DECAY = args.weight_decay
 NODE_FEAT_SIZE = args.fea_dim
 EMBEDDING_SIZE1 = args.dim
-CUDA = args.cuda
+DEVICES = args.devices
 LEARNING_RATE = args.lr
 BATCH_SIZE = args.batch_size
 EPOCHS = args.epochs
 DROUPOUT = args.dropout
 K = args.k
 
-NEG_LOSS_RATIO = 1
-
-'''
-'''
 
 class Encoder(nn.Module):
     """
@@ -83,9 +83,7 @@ class Encoder(nn.Module):
         self.embed_dim = embed_dim
         for i, agg in enumerate(self.aggs):
             self.add_module('agg_{}'.format(i), agg)
-            self.aggs[i] = agg.cuda()
-
-        in_size = self.feat_dim * 3
+            self.aggs[i] = agg.to(DEVICES)
 
         def init_weights(m):
             if type(m) == nn.Linear:
@@ -106,10 +104,7 @@ class Encoder(nn.Module):
         Generates embeddings for nodes.
         """
         neigh_feats = [agg.forward(nodes, adj) for adj, agg in zip(self.adj_lists, self.aggs)]
-        if CUDA:
-            self_feats = self.features_lists[0](torch.LongTensor(nodes).cuda())
-        else:
-            self_feats = self.features_lists[0](torch.LongTensor(nodes))
+        self_feats = self.features_lists[0](torch.LongTensor(nodes).to(DEVICES))
         combined = torch.cat([self_feats] + neigh_feats, 1)
         combined = self.nonlinear_layer(combined)
         return combined
@@ -145,19 +140,16 @@ class AttentionAggregator(nn.Module):
         # this dict can map new i to originial node id
         self.unique_nodes_dict[unique_nodes_list] = np.arange(batch_node_num)
 
-
-        # edges = np.copy(edges1)
         edges[:, 0] = self.unique_nodes_dict[edges[:, 0]]
         edges[:, 1] = self.unique_nodes_dict[edges[:, 1]]
 
-        n2 = torch.LongTensor(unique_nodes_list).cuda()
-
+        n2 = torch.LongTensor(unique_nodes_list).to(DEVICES)
         new_embeddings = self.out_linear_layer(self.features(n2))
 
         original_node_edge = np.array([self.unique_nodes_dict[nodes], self.unique_nodes_dict[nodes]]).T
         edges = np.vstack((edges, original_node_edge))
 
-        edges = torch.LongTensor(edges).cuda()
+        edges = torch.LongTensor(edges).to(DEVICES)
 
         edge_h_2 = torch.cat((new_embeddings[edges[:, 0], :], new_embeddings[edges[:, 1], :]), dim=1)
 
@@ -167,7 +159,7 @@ class AttentionAggregator(nn.Module):
         matrix = torch.sparse_coo_tensor(indices.t(), edges_h[:, 0], \
                                          torch.Size([batch_node_num, batch_node_num]))
 
-        row_sum = torch.matmul(matrix, torch.ones(size=(batch_node_num, 1)).cuda())
+        row_sum = torch.matmul(matrix, torch.ones(size=(batch_node_num, 1)).to(DEVICES))
         edges_h = self.dropout(edges_h)
 
         matrix = torch.sparse_coo_tensor(indices.t(), edges_h[:, 0], \
@@ -175,8 +167,7 @@ class AttentionAggregator(nn.Module):
 
         results = torch.matmul(matrix, new_embeddings)
 
-
-        row_sum = torch.where(row_sum == 0, torch.ones(row_sum.shape).cuda(), row_sum)
+        row_sum = torch.where(row_sum == 0, torch.ones(row_sum.shape).to(DEVICES), row_sum)
 
         output_emb = results.div(row_sum)
 
@@ -188,17 +179,12 @@ class SiGAT(nn.Module):
     def __init__(self, enc):
         super(SiGAT, self).__init__()
         self.enc = enc
-        # self.status_score = nn.Linear(
-        #     EMBEDDING_SIZE1 * 2, 1,
-        #     nn.Sigmoid()
-        # )
 
     def forward(self, nodes):
         embeds = self.enc(nodes)
         return embeds
 
-
-    def criterion2(self, nodes, pos_neighbors, neg_neighbors):
+    def criterion(self, nodes, pos_neighbors, neg_neighbors):
         pos_neighbors_list = [set.union(pos_neighbors[i]) for i in nodes]
         neg_neighbors_list = [set.union(neg_neighbors[i]) for i in nodes]
         unique_nodes_list = list(set.union(*pos_neighbors_list).union(*neg_neighbors_list).union(nodes))
@@ -231,13 +217,13 @@ class SiGAT(nn.Module):
 
 def load_data2(filename='', add_public_foe=True):
 
-    adj_lists1 = defaultdict(set)
+    adj_lists1   = defaultdict(set)
     adj_lists1_1 = defaultdict(set)
     adj_lists1_2 = defaultdict(set)
-    adj_lists2 = defaultdict(set)
+    adj_lists2   = defaultdict(set)
     adj_lists2_1 = defaultdict(set)
     adj_lists2_2 = defaultdict(set)
-    adj_lists3 = defaultdict(set)
+    adj_lists3   = defaultdict(set)
 
 
     with open(filename) as fp:
@@ -282,18 +268,17 @@ def read_emb(num_nodes, fpath):
                 embeddings[int(node)] = np.array(emb)
     return embeddings
 
-def run_emb(dataset='bitcoin_alpha', k=2):
+def run_ssa( dataset='bitcoin_alpha', k=2):
     num_nodes = DATASET_NUM_DIC[dataset] + 3
 
     # adj_lists1, adj_lists2, adj_lists3 = load_data(k, dataset)
-    filename = './experiment-data/{}-signed-{}.edgelist'.format(dataset, k)
+    filename = './experiment-data/{}-train-{}.edgelist'.format(dataset, k)
     adj_lists1, adj_lists1_1, adj_lists1_2, adj_lists2, adj_lists2_1, adj_lists2_2, adj_lists3 = load_data2(filename, add_public_foe=False)
     print(k, dataset, 'data load!')
     features = nn.Embedding(num_nodes, NODE_FEAT_SIZE)
     features.weight.requires_grad = True
 
-    if CUDA:
-        features.cuda()
+    features.to(DEVICES)
 
     adj_lists = [adj_lists1, adj_lists1_1, adj_lists1_2, adj_lists2, adj_lists2_1, adj_lists2_2]
 
@@ -311,7 +296,6 @@ def run_emb(dataset='bitcoin_alpha', k=2):
             for index, v in enumerate(v_list):
                 if v > 0:
                     adj_additions0[index][i].add(j)
-
 
     for i in adj_lists1_1:
         for j in adj_lists1_1[i]:
@@ -333,9 +317,20 @@ def run_emb(dataset='bitcoin_alpha', k=2):
 
     # 38
     adj_lists = adj_lists + adj_additions1 + adj_additions2
+    
     #adj_lists = adj_lists + adj_additions1 + adj_additions2 + [adj_lists3]
     ########################
 
+    # 2
+    # adj_lists = [adj_lists1, adj_lists2]
+
+    # 6
+    # adj_lists = [adj_lists1, adj_lists1_1, adj_lists1_2, adj_lists2, adj_lists2_1, adj_lists2_2]
+
+    # 18
+    # adj_lists = adj_lists + adj_additions0
+
+    print(len(adj_lists), 'motifs')
 
     def func(adj_list):
         edges = []
@@ -346,18 +341,15 @@ def run_emb(dataset='bitcoin_alpha', k=2):
         adj = sp.csr_matrix((np.ones(len(edges)), (edges[:,0], edges[:,1])), shape=(num_nodes, num_nodes))
         return adj
 
-
     adj_lists = list(map(func, adj_lists))
     features_lists = [features for _ in range(len(adj_lists))]
-    print(len(adj_lists), 'attention')
     aggs = [AttentionAggregator(features, NODE_FEAT_SIZE, NODE_FEAT_SIZE, num_nodes) for features, adj in
             zip(features_lists, adj_lists)]
 
     enc1 = Encoder(features_lists, NODE_FEAT_SIZE, EMBEDDING_SIZE1, adj_lists, aggs)
 
     model = SiGAT(enc1)
-    if CUDA:
-        model.cuda()
+    model.to(DEVICES)
     print(model.train())
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad,
                                         list(model.parameters()) + list(enc1.parameters()) \
@@ -365,7 +357,6 @@ def run_emb(dataset='bitcoin_alpha', k=2):
                                  lr=LEARNING_RATE,
                                  weight_decay=WEIGHT_DECAY
                                  )
-
 
     for epoch in range(EPOCHS + 2):
         total_loss = []
@@ -380,8 +371,9 @@ def run_emb(dataset='bitcoin_alpha', k=2):
                 embed = embed.data.cpu().numpy()
                 all_embedding[begin_index: end_index] = embed
 
-            np.save('./sigat-results/embedding-{}-{}-{}.npy'.format(dataset, k, str(epoch)), all_embedding)
-            model = model.train()
+            fpath = os.path.join(OUTPUT_DIR, 'embedding-{}-{}-{}.npy'.format(dataset, k, str(epoch)) )
+            np.save(fpath, all_embedding)
+            model.train()
 
         time1 = time.time()
         nodes_pku = np.random.permutation(NUM_NODE).tolist()
@@ -391,21 +383,26 @@ def run_emb(dataset='bitcoin_alpha', k=2):
             e_index = (batch + 1) * BATCH_SIZE
             nodes = nodes_pku[b_index:e_index]
 
-            loss = model.criterion2(
+            loss = model.criterion(
                 nodes, adj_lists1, adj_lists2
             )
             total_loss.append(loss.data.cpu().numpy())
 
             loss.backward()
             optimizer.step()
-        print(epoch, np.sum(total_loss), time.time() - time1)
+        print(f'epoch: {epoch}, loss: {np.sum(total_loss)}, time: {time.time()-time1}')
 
 
 def main():
-    run_emb(dataset=args.dataset, k=K)
-
-
-# hello
+    print('NUM_NODE', NUM_NODE)
+    print('WEIGHT_DECAY', WEIGHT_DECAY)
+    print('NODE_FEAT_SIZE', NODE_FEAT_SIZE)
+    print('EMBEDDING_SIZE1', EMBEDDING_SIZE1)
+    print('LEARNING_RATE', LEARNING_RATE)
+    print('BATCH_SIZE', BATCH_SIZE)
+    print('EPOCHS', EPOCHS)
+    print('DROUPOUT', DROUPOUT)
+    run_ssa(dataset=args.dataset, k=K)
 
 
 if __name__ == "__main__":
