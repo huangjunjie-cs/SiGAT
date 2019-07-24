@@ -1,7 +1,7 @@
 ## Signed Graph Attention Networks
 
 ## Overview
-This paper is accepted at ICANN2019.
+This [paper](https://arxiv.org/abs/1906.10958) is accepted at ICANN2019.
 
 <div align=center>
  <img src="./imgs/SiGAT.png" alt="Sigat" align=center/>
