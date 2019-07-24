@@ -1,4 +1,4 @@
-## Signed Graph Attention Network
+## Signed Graph Attention Networks
 
 ## Overview
 This paper is accepted at ICANN2019.
