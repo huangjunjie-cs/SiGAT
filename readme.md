@@ -21,7 +21,7 @@ pip install -r requirements.txt
 ## Parameters
 
 ```
-parser.add_argument('', type=str, default='cpu', help='Devices')
+parser.add_argument('--devices', type=str, default='cpu', help='Devices')
 parser.add_argument('--seed', type=int, default=13, help='Random seed.')
 parser.add_argument('--epochs', type=int, default=100, help='Number of epochs to train.')
 parser.add_argument('--lr', type=float, default=0.0005, help='Initial learning rate.')
