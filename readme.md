@@ -17,31 +17,50 @@ The script has been tested running under Python 3.6.3, with the following packag
 pip install -r requirements.txt
 ```
 
-## Run the Code
-
-```
-python sigat.py
-```
 
 ## Parameters
 
 ```
---epochs                INT         Number of SiGAT training epochs.     Default is 100. 
---seed                  INT         Random seed value.                   Default is 13.
---learning-rate         FLOAT       Learning rate.                       Default is 0.0005.  
---weight-decay          FLOAT       Weight decay.                        Default is 10^-5. 
-
+parser.add_argument('', type=str, default='cpu', help='Devices')
+parser.add_argument('--seed', type=int, default=13, help='Random seed.')
+parser.add_argument('--epochs', type=int, default=100, help='Number of epochs to train.')
+parser.add_argument('--lr', type=float, default=0.0005, help='Initial learning rate.')
+parser.add_argument('--weight_decay', type=float, default=0.0001, help='Weight decay (L2 loss on parameters).')
+parser.add_argument('--dataset', default='bitcoin_alpha', help='Dataset')
+parser.add_argument('--dim', type=int, default=20, help='Embedding Dimension')
+parser.add_argument('--fea_dim', type=int, default=20, help='Feature Embedding Dimension')
+parser.add_argument('--batch_size', type=int, default=500, help='Batch Size')
+parser.add_argument('--dropout', type=float, default=0.0, help='Dropout k')
+parser.add_argument('--k', default=1, help='Folder k')
 ```
 
 
 ## Run Example
 
+
+Firstly, run ```python sigat.py``` get node embeddings, then run ```python logistic_function.py``` to get results.
+
 ```
-python sigat_demo.py
+pos_ratio: 0.9394377842083506
+accuracy: 0.9481190574617611
+f1_score: 0.9728149030650927
+macro f1_score: 0.7031117404715983
+micro f1_score: 0.9481190574617611
+auc score: 0.8899769840465275
 ```
+
 
 ## Cite
 Please cite our paper if you use this code in your own work:
+
+```
+@article{huang2019signed,
+  title={Signed Graph Attention Networks},
+  author={Huang, Junjie and Shen, Huawei and Hou, Liang and Cheng, Xueqi},
+  journal={arXiv preprint arXiv:1906.10958},
+  year={2019}
+}
+```
 
 
 ## Acknowledgement

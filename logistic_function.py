@@ -314,7 +314,7 @@ def logistic_embedding9(k=1, dataset='epinions', epoch=10, dirname='sigat'):
 
 def main():
     dataset = 'bitcoin_alpha'
-    pos_ratio, accuracy, f1_score0, f1_score1, f1_score2, auc_score = logistic_embedding9(k=2, dataset=dataset, epoch=100, dirname='sigat')
+    pos_ratio, accuracy, f1_score0, f1_score1, f1_score2, auc_score = logistic_embedding9(k=1, dataset=dataset, epoch=100, dirname='sigat')
     
     # print("pos_ratio:", pos_ratio)
     # print('accuracy:', accuracy)

@@ -55,6 +55,8 @@ np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 
 NEG_LOSS_RATIO = 1
+INTERVAL_PRINT = 20
+
 NUM_NODE = DATASET_NUM_DIC[args.dataset]
 WEIGHT_DECAY = args.weight_decay
 NODE_FEAT_SIZE = args.fea_dim
@@ -360,7 +362,7 @@ def run_ssa( dataset='bitcoin_alpha', k=2):
 
     for epoch in range(EPOCHS + 2):
         total_loss = []
-        if True:
+        if epoch % INTERVAL_PRINT == 0:
             model.eval()
             all_embedding = np.zeros((NUM_NODE, EMBEDDING_SIZE1))
             for i in range(0, NUM_NODE, BATCH_SIZE):
