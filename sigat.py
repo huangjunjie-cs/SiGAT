@@ -61,12 +61,13 @@ NUM_NODE = DATASET_NUM_DIC[args.dataset]
 WEIGHT_DECAY = args.weight_decay
 NODE_FEAT_SIZE = args.fea_dim
 EMBEDDING_SIZE1 = args.dim
-DEVICES = args.devices
+DEVICES = torch.device(args.devices)
 LEARNING_RATE = args.lr
 BATCH_SIZE = args.batch_size
 EPOCHS = args.epochs
 DROUPOUT = args.dropout
 K = args.k
+print(DEVICES)
 
 
 class Encoder(nn.Module):
@@ -159,13 +160,14 @@ class AttentionAggregator(nn.Module):
         indices = edges
 
         matrix = torch.sparse_coo_tensor(indices.t(), edges_h[:, 0], \
-                                         torch.Size([batch_node_num, batch_node_num]))
+                                         torch.Size([batch_node_num, batch_node_num]),device=DEVICES)
 
         row_sum = torch.matmul(matrix, torch.ones(size=(batch_node_num, 1)).to(DEVICES))
         edges_h = self.dropout(edges_h)
 
         matrix = torch.sparse_coo_tensor(indices.t(), edges_h[:, 0], \
-                                         torch.Size([batch_node_num, batch_node_num]))
+                                         torch.Size([batch_node_num, batch_node_num]), device=DEVICES)
+
 
         results = torch.matmul(matrix, new_embeddings)
 
