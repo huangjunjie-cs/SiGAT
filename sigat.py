@@ -160,7 +160,7 @@ class AttentionAggregator(nn.Module):
         indices = edges
 
         matrix = torch.sparse_coo_tensor(indices.t(), edges_h[:, 0], \
-                                         torch.Size([batch_node_num, batch_node_num]),device=DEVICES)
+                                         torch.Size([batch_node_num, batch_node_num]), device=DEVICES)
 
         row_sum = torch.matmul(matrix, torch.ones(size=(batch_node_num, 1)).to(DEVICES))
         edges_h = self.dropout(edges_h)
@@ -272,7 +272,7 @@ def read_emb(num_nodes, fpath):
                 embeddings[int(node)] = np.array(emb)
     return embeddings
 
-def run_ssa( dataset='bitcoin_alpha', k=2):
+def run( dataset='bitcoin_alpha', k=2):
     num_nodes = DATASET_NUM_DIC[dataset] + 3
 
     # adj_lists1, adj_lists2, adj_lists3 = load_data(k, dataset)
@@ -406,7 +406,7 @@ def main():
     print('BATCH_SIZE', BATCH_SIZE)
     print('EPOCHS', EPOCHS)
     print('DROUPOUT', DROUPOUT)
-    run_ssa(dataset=args.dataset, k=K)
+    run(dataset=args.dataset, k=K)
 
 
 if __name__ == "__main__":
