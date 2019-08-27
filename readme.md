@@ -42,11 +42,12 @@ Firstly, run ```python sigat.py``` get node embeddings, then run ```python logis
 
 ```
 pos_ratio: 0.9394377842083506
-accuracy: 0.9468788755684167
-f1_score: 0.9721590293575995
-macro f1_score: 0.6973154697349795
-micro f1_score: 0.9468788755684167
-auc score: 0.8872736420399719
+accuracy: 0.9466721785861927
+f1_score: 0.9720476706392199
+macro f1_score: 0.696786167158175
+micro f1_score: 0.9466721785861927
+auc score: 0.8879674998216545
+
 ```
 
 
