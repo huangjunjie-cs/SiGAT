@@ -65,5 +65,4 @@ Please cite our paper if you use this code in your own work:
 
 ## Acknowledgement
 
-> Some codes adapted from [paper](https://dl.acm.org/citation.cfm?id=1772756)
-
+> Some codes adapted from [paper](https://dl.acm.org/citation.cfm?id=1772756) and [pyGAT](https://github.com/Diego999/pyGAT)
