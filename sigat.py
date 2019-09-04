@@ -25,7 +25,6 @@ from common import DATASET_NUM_DIC
 #
 from fea_extra import FeaExtra
 
-
 OUTPUT_DIR = './embeddings/sigat'
 if not os.path.exists('embeddings'):
     os.mkdir('embeddings')
@@ -112,6 +111,35 @@ class Encoder(nn.Module):
         combined = self.nonlinear_layer(combined)
         return combined
 
+class SpecialSpmmFunction(torch.autograd.Function):
+    """Special function for only sparse region backpropataion layer."""
+    @staticmethod
+    def forward(ctx, indices, values, shape, b):
+        assert indices.requires_grad == False
+        a = torch.sparse_coo_tensor(indices, values, shape, device=DEVICES)
+        ctx.save_for_backward(a, b)
+        ctx.N = shape[0]
+        return torch.matmul(a, b)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        a, b = ctx.saved_tensors
+        grad_values = grad_b = None
+        if ctx.needs_input_grad[1]:
+            grad_a_dense = grad_output.matmul(b.t())
+            edge_idx = a._indices()[0, :] * ctx.N + a._indices()[1, :]
+            grad_values = grad_a_dense.view(-1)[edge_idx]
+        if ctx.needs_input_grad[3]:
+            grad_b = a.t().matmul(grad_output)
+        return None, grad_values, None, grad_b
+
+
+class SpecialSpmm(nn.Module):
+    def forward(self, indices, values, shape, b):
+        return SpecialSpmmFunction.apply(indices, values, shape, b)
+
+
+
 
 class AttentionAggregator(nn.Module):
     def __init__(self, features, in_dim, out_dim, node_num,  dropout_rate=DROUPOUT, slope_ratio=0.1):
@@ -124,6 +152,8 @@ class AttentionAggregator(nn.Module):
         self.slope_ratio = slope_ratio
         self.a = nn.Parameter(torch.FloatTensor(out_dim * 2, 1))
         nn.init.kaiming_normal_(self.a.data)
+        self.speical_spmm = SpecialSpmm()
+
         self.out_linear_layer = nn.Linear(self.in_dim, self.out_dim)
         self.unique_nodes_dict = np.zeros(node_num, dtype=np.int32)
 
@@ -159,19 +189,10 @@ class AttentionAggregator(nn.Module):
         edges_h = torch.exp(F.leaky_relu(torch.einsum("ij,jl->il", [edge_h_2, self.a]), self.slope_ratio))
         indices = edges
 
-        matrix = torch.sparse_coo_tensor(indices.t(), edges_h[:, 0], \
-                                         torch.Size([batch_node_num, batch_node_num]), device=DEVICES)
-
-        row_sum = torch.matmul(matrix, torch.ones(size=(batch_node_num, 1)).to(DEVICES))
-        edges_h = self.dropout(edges_h)
-
-        matrix = torch.sparse_coo_tensor(indices.t(), edges_h[:, 0], \
-                                         torch.Size([batch_node_num, batch_node_num]), device=DEVICES)
+        row_sum = self.speical_spmm(edges.t(), edges_h[:, 0], torch.Size((batch_node_num, batch_node_num)), torch.ones(size=(batch_node_num, 1)).to(DEVICES))
 
 
-        results = torch.matmul(matrix, new_embeddings)
-
-        row_sum = torch.where(row_sum == 0, torch.ones(row_sum.shape).to(DEVICES), row_sum)
+        results = self.speical_spmm(edges.t(), edges_h[:, 0], torch.Size((batch_node_num, batch_node_num)), new_embeddings)
 
         output_emb = results.div(row_sum)
 
@@ -411,4 +432,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
