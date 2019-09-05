@@ -7,7 +7,7 @@ This [paper](https://arxiv.org/abs/1906.10958) is accepted at ICANN2019.
  <img src="./imgs/SiGAT.png" alt="Sigat" align=center/>
 </div>
 
-> We provide a Pytorch implementation of Signed Graph Attention Network, which incorporates graph motifs into GAT to capture two well-known theories in signed network research, i.e., balance theory and status theory.
+> We provide a Pytorch implementation of Signed Graph Attention Networks, which incorporates graph motifs into GAT to capture two well-known theories in signed network research, i.e., balance theory and status theory.
 
 ## Requirements
 
