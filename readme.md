@@ -1,4 +1,4 @@
-## Signed Graph Attention Networks
+## Signed Graph Attention Networks [![HitCount](http://hits.dwyl.com/huangjunjie95/huangjunjie95/SiGAT.svg)](http://hits.dwyl.com/huangjunjie95/huangjunjie95/SiGAT)
 
 ## Overview
 This [paper](https://arxiv.org/abs/1906.10958) is accepted at ICANN2019.
