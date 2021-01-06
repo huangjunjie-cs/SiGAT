@@ -73,7 +73,6 @@ BATCH_SIZE = args.batch_size
 EPOCHS = args.epochs
 DROUPOUT = args.dropout
 K = args.k
-print(DEVICES)
 
 
 
@@ -382,10 +381,6 @@ def run(dataset, k):
     filename = './experiment-data/{}-train-{}.edgelist'.format(dataset, k)
     adj_lists1, adj_lists1_1, adj_lists1_2, adj_lists2, adj_lists2_1, adj_lists2_2, adj_lists3 = load_data2(filename)
     print(k, dataset, 'data load!')
-    # pretrain_path = os.path.join('embeddings', 'sign2vec', f"embeddings-{dataset}-{k}.npy")
-    # embeddings = np.load(pretrain_path)
-    # features = nn.Embedding.from_pretrained(torch.from_numpy(embeddings).float())
-    # features.weight.requires_grad = True
 
     features = nn.Embedding(num_nodes, NODE_FEAT_SIZE)
     features.weight.requires_grad = True
@@ -394,13 +389,7 @@ def run(dataset, k):
 
     adj_lists = [adj_lists1_1, adj_lists1_2,  adj_lists2_1, adj_lists2_2]
 
-    #######
-    # fea_model = FeaExtra(dataset=dataset, k=k)
-    # adj_additions1 = [defaultdict(set) for _ in range(16)]
-    # adj_additions2 = [defaultdict(set) for _ in range(16)]
-    # adj_additions0 = [defaultdict(set) for _ in range(16)]
-    # a, b = 0, 0
-
+  
     weight_dict = defaultdict(dict)
     fea_model = FeaExtra(dataset=dataset, k=k)
 
@@ -476,11 +465,6 @@ def run(dataset, k):
             pos_ratio, accuracy, f1_score0, f1_score1, f1_score2, auc_score = logistic_embedding(k=k, dataset=dataset,
                                                                                                  epoch=epoch,
                                                                                                 dirname=OUTPUT_DIR)
-            # print("pos_ratio:", pos_ratio)
-            # print('accuracy:', accuracy)
-            # print("f1_score:", f1_score0)
-            # print("macro f1_score:", f1_score1)
-            # print("auc score:", auc_score)
             model.train()
 
         time1 = time.time()
@@ -509,12 +493,6 @@ def main():
     print('BATCH_SIZE', BATCH_SIZE)
     print('EPOCHS', EPOCHS)
     print('DROUPOUT', DROUPOUT)
-    this_fpath_path = os.path.abspath(__file__)
-
-    t = subprocess.run(f"cat {this_fpath_path}", shell=True, stdout=subprocess.PIPE)
-    print(str(t.stdout, "utf8"))
-    print("=" * 20)
-
     dataset = args.dataset
     run(dataset=dataset, k=K)
 
