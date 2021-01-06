@@ -1,4 +1,7 @@
-## Signed Graph Attention Networks [![HitCount](http://hits.dwyl.com/huangjunjie95/huangjunjie95/SiGAT.svg)](http://hits.dwyl.com/huangjunjie95/huangjunjie95/SiGAT)
+# Signed Graph Attention Networks 
+
+Update: We optimized the architecture of the model and proposed a new model (SDGNN), and related research results are published on AAAI2021. [more detail](./readme_sdgnn.md)
+
 
 ## Overview
 This [paper](https://arxiv.org/abs/1906.10958) is accepted at ICANN2019.
@@ -50,19 +53,20 @@ auc score: 0.8886568520333262
 ```
 
 
-## Cite
+## Bibtex
 Please cite our paper if you use this code in your own work:
 
 ```
-@article{huang2019signed,
-  title={Signed Graph Attention Networks},
+@inproceedings{huang2019signed,
+  title={Signed graph attention networks},
   author={Huang, Junjie and Shen, Huawei and Hou, Liang and Cheng, Xueqi},
-  journal={arXiv preprint arXiv:1906.10958},
-  year={2019}
+  booktitle={International Conference on Artificial Neural Networks},
+  pages={566--577},
+  year={2019},
+  organization={Springer}
 }
 ```
 
-
 ## Acknowledgement
 
-> Some codes adapted from [paper](https://dl.acm.org/citation.cfm?id=1772756) and [pyGAT](https://github.com/Diego999/pyGAT)
+> Some codes are adapted from [paper](https://dl.acm.org/citation.cfm?id=1772756) and [pyGAT](https://github.com/Diego999/pyGAT)
