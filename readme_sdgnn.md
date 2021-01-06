@@ -1,4 +1,4 @@
-##  SDGNN: Learning Node Representation for Signed Directed Networks
+#  SDGNN: Learning Node Representation for Signed Directed Networks
 
 ## Abstract
 
