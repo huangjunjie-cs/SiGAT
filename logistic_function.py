@@ -310,6 +310,13 @@ def logistic_embedding9(k=1, dataset='epinions', epoch=10, dirname='sigat'):
     pos_ratio, accuracy, f1_score0, f1_score1, f1_score2, auc_score = common_logistic(dataset, k, embeddings, 'sigat')
     return pos_ratio, accuracy, f1_score0, f1_score1, f1_score2, auc_score
 
+def logistic_embedding(k=1, dataset='bitcoin_otc', epoch = 10, dirname='sgae'):
+
+    print(epoch, dataset)
+    fpath = os.path.join(dirname, 'embedding-{}-{}-{}.npy'.format(dataset, k, epoch))
+    embeddings = np.load(fpath)
+    pos_ratio, accuracy, f1_score0, f1_score1, f1_score2, auc_score = common_logistic(dataset, k, embeddings, dirname)
+    return pos_ratio, accuracy, f1_score0, f1_score1, f1_score2, auc_score
 
 
 def main():
