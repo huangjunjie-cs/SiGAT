@@ -57,11 +57,13 @@ auc score: 0.8886568520333262
 Please cite our paper if you use this code in your own work:
 
 ```
-@article{huang2019signed,
-  title={Signed Graph Attention Networks},
+@inproceedings{huang2019signed,
+  title={Signed graph attention networks},
   author={Huang, Junjie and Shen, Huawei and Hou, Liang and Cheng, Xueqi},
-  journal={arXiv preprint arXiv:1906.10958},
-  year={2019}
+  booktitle={International Conference on Artificial Neural Networks},
+  pages={566--577},
+  year={2019},
+  organization={Springer}
 }
 ```
 
