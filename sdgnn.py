@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 @author: huangjunjie
-@file: sigat.py
-@time: 2018/12/10
+@file: sdgnn.py
+@time: 2019/12/10
 """
 
 import os
@@ -122,8 +122,6 @@ class Encoder(nn.Module):
         combined = torch.cat([self_feats] + neigh_feats, 1)
         combined = self.nonlinear_layer(combined)
         return combined
-
-        k = self.k(self_feats)
 
 
 class AttentionAggregator(nn.Module):
