@@ -363,6 +363,8 @@ def run( dataset='bitcoin_alpha', k=2):
             for b in adj_list[a]:
                 edges.append((a, b))
         edges = np.array(edges)
+        if len(edges) == 0: # fix missing motifs edges 
+            edges = np.array([[0, 0]]) 
         adj = sp.csr_matrix((np.ones(len(edges)), (edges[:,0], edges[:,1])), shape=(num_nodes, num_nodes))
         return adj
 
