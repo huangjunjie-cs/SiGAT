@@ -43,10 +43,13 @@ Please cite our paper if you use this code in your own work:
 ```
 
 ```
-@inproceedings{huangsdgnn,
+@inproceedings{huang2021sdgnn,
   title={SDGNN: Learning Node Representation for Signed Directed Networks},
   author={Huang, Junjie and Shen, Huawei and Hou, Liang and Cheng, Xueqi},
   booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume={35},
+  number={1},
+  pages={196--203},
   year={2021}
 }
 ```
